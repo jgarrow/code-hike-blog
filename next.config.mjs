@@ -1,27 +1,43 @@
+import createNextDocsMDX from "next-docs-mdx/config"
 import { remarkCodeHike, recmaCodeHike } from "codehike/mdx"
-import createMDX from "@next/mdx"
-
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  // Configure `pageExtensions`` to include MDX files
-  pageExtensions: ["js", "jsx", "mdx", "ts", "tsx"],
-  // Optionally, add any other Next.js config below
-}
 
 /** @type {import('codehike/mdx').CodeHikeConfig} */
 const chConfig = {
-  components: { code: "Code" },
+  components: {
+    code: "Code",
+  },
+  ignoreCode: (codeblock) => codeblock.lang === "mermaid",
+  // syntaxHighlighting: {
+  //   theme: "github-dark",
+  // },
 }
 
-// add other remark and recma plugins as needed
-const withMDX = createMDX({
-  extension: /\.mdx?$/,
-  options: {
+const withMDX = createNextDocsMDX({
+  mdxOptions: {
     remarkPlugins: [[remarkCodeHike, chConfig]],
     recmaPlugins: [[recmaCodeHike, chConfig]],
     jsx: true,
   },
 })
 
-// Merge MDX config with Next.js config
-export default withMDX(nextConfig)
+/** @type {import('next').NextConfig} */
+const config = {
+  reactStrictMode: true,
+  webpack: (config) => {
+    // fix https://github.com/microsoft/TypeScript-Website/pull/3022
+    config.module.exprContextCritical = false
+    return config
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "github.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
+  },
+}
+
+export default withMDX(config)

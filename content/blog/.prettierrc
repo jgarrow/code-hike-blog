@@ -1,0 +1,13 @@
+{
+  "trailingComma": "all",
+  "semi": false,
+  "overrides": [
+    {
+      "files": ["remotion.mdx"],
+      "options": {
+        "printWidth": 42,
+        "semi": false
+      }
+    }
+  ]
+}
