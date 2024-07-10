@@ -13,6 +13,7 @@ const chConfig = {
   components: { code: "Code" },
 }
 
+// add other remark and recma plugins as needed
 const withMDX = createMDX({
   extension: /\.mdx?$/,
   options: {
