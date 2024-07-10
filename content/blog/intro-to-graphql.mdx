@@ -1,0 +1,34 @@
+---
+title: Intro to GraphQL
+description: An overview of the basics of GraphQL for frontend developers
+date: 2024-07-10
+authors: [jgarrow]
+className: min-w-[700px] px-16
+draft: true
+---
+
+import { Code, Columns, Scrollycoding } from "./remotion/code"
+import { Callout } from "next-docs-ui/components/callout"
+
+import { GlossaryTooltip } from "@/components/glossary-tooltip"
+import FieldTooltipContent from "@/glossary/graphql/field.mdx"
+
+GraphQL is a query language and specification for APIs that aims to enable clients to request specific data. This specificity in requests promotes efficiency and flexibility in data retrieval.
+
+GraphQL was developed by Facebook in 2012 and released as an open-source project in 2015. Since then, it has gained popularity as an alternative to REST APIs. In this post, we'll cover some of the basics of GraphQL and some best practices when consuming a GraphQL API from a frontend application.
+
+<Callout>
+  We'll be using the public Star Wars GraphQL API (SWAPI) in the examples here
+  to demonstrate some of the concepts. You can find the [API documentation and
+  GraphiQL playground here](https://graphql.org/swapi-graphql/).
+</Callout>
+
+## Schema
+
+A GraphQL schema is a collection of types that define when the API can and can't do. If it's not in the schema, clients can't request it. Think of the schema as a menu at a restaurant. It has a list of all of the things you're allowed to order. If it's not on the menu, you can't order it.
+
+The shape of the schema follows a specification syntax called the Schema Definition Language (SDL). This is the syntax that a GraphQL API's schema will ALWAYS take, regardless of what programming language the underlying API is written in or what third-party GraphQL libraries you may be using.
+
+At its core, a schema is made up of object `types` that contain `fields`. The fields are the individual pieces of data that can be requested. Each <GlossaryTooltip term="field"><FieldTooltipContent /></GlossaryTooltip> has a `type` that defines what kind of data it is. The type can be a scalar (like a string, number, or boolean), an object (another type in the schema), or a list of other types.
+
+There are 2 types of `operations` in a GraphQL schema: a `query` and a `mutation`. A `query` is a read operation (think GET), and a `mutation` is a write operation (think PUT, POST, or DELETE). The entry point into a GraphQL API is called the `root` type. This is where you define the queries and mutations that are available to clients.

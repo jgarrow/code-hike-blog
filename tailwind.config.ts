@@ -10,6 +10,7 @@ const config = {
     "./components/**/*.{ts,tsx,js,jsx}",
     "./app/**/*.{ts,tsx,js,jsx}",
     "./content/**/*.{md,mdx,ts,tsx,js,jsx}",
+    "./glossary/**/*.{md,mdx,ts,tsx,js,jsx}",
     "./mdx-components.{ts,tsx}",
     "./node_modules/next-docs-ui/dist/**/*.js",
   ],
