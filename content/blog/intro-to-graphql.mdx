@@ -9,9 +9,12 @@ draft: true
 
 import { Code, Columns, Scrollycoding } from "./remotion/code"
 import { Callout } from "next-docs-ui/components/callout"
+import { CodeWithTooltips } from "@/components/code-with-tooltips"
 
 import { GlossaryTooltip } from "@/components/glossary-tooltip"
 import FieldTooltipContent from "@/glossary/graphql/field.mdx"
+import TypeTooltipContent from "@/glossary/graphql/type.mdx"
+import ScalarTooltipContent from "@/glossary/graphql/scalar.mdx"
 
 GraphQL is a query language and specification for APIs that aims to enable clients to request specific data. This specificity in requests promotes efficiency and flexibility in data retrieval.
 
@@ -23,12 +26,429 @@ GraphQL was developed by Facebook in 2012 and released as an open-source project
   GraphiQL playground here](https://graphql.org/swapi-graphql/).
 </Callout>
 
-## Schema
+## Schema Definition Language (SDL)
 
 A GraphQL schema is a collection of types that define when the API can and can't do. If it's not in the schema, clients can't request it. Think of the schema as a menu at a restaurant. It has a list of all of the things you're allowed to order. If it's not on the menu, you can't order it.
 
 The shape of the schema follows a specification syntax called the Schema Definition Language (SDL). This is the syntax that a GraphQL API's schema will ALWAYS take, regardless of what programming language the underlying API is written in or what third-party GraphQL libraries you may be using.
 
-At its core, a schema is made up of object `types` that contain `fields`. The fields are the individual pieces of data that can be requested. Each <GlossaryTooltip term="field"><FieldTooltipContent /></GlossaryTooltip> has a `type` that defines what kind of data it is. The type can be a scalar (like a string, number, or boolean), an object (another type in the schema), or a list of other types.
+<CodeWithTooltips>
 
-There are 2 types of `operations` in a GraphQL schema: a `query` and a `mutation`. A `query` is a read operation (think GET), and a `mutation` is a write operation (think PUT, POST, or DELETE). The entry point into a GraphQL API is called the `root` type. This is where you define the queries and mutations that are available to clients.
+```js !code schema.graphql -cwn
+// !pill[1:4] 6
+// !pill[6:13]
+// !tooltip[/type/] type
+// !tooltip[/Starship/] type name
+type Starship {
+  // !pill[3:4] 5
+  // !pill[7:8] 2
+  id: ID!
+  // !pill[3:6] 5
+  // !pill[9:14] 2
+  // !tooltip[/name/] field
+  name: String
+  // !pill[3:10] 5
+  // !pill[13:21] 2
+  // !pill[22] 4
+  // !tooltip[/Mission/] scalar
+  missions: [Mission]!
+}
+```
+
+## !!tooltips type
+
+`type` keyword
+
+## !!tooltips type name
+
+Type name -- written in PascalCase by convention
+
+## !!tooltips field
+
+Field name
+
+## !!tooltips scalar
+
+Field type
+
+</CodeWithTooltips>
+
+At its core, a schema is made up of object `types` that contain `fields`. The fields are the individual pieces of data that can be requested. Each <GlossaryTooltip term="field"><FieldTooltipContent /></GlossaryTooltip> has a `type` that defines what kind of data it is. The <GlossaryTooltip term="type"><TypeTooltipContent /></GlossaryTooltip> can be a <GlossaryTooltip term="scalar"><ScalarTooltipContent /></GlossaryTooltip> (like a string, number, or boolean), an object (another type in the schema), or a list of other types.
+
+### Root fields
+
+The entry points for a GraphQL API are called tge "root" types. These are the top-level fields that define what can be accessed. In the Star Wars API, the root fields are `allFilms`, `allPeople`, `allPlanets`, `allSpecies`, and `allStarships`.
+
+```js schema.graphql -cwn
+// !pill[6:10]
+type Query {
+  allFilms: [Film]
+  allPeople: [Person]
+  allPlanets: [Planet]
+  allSpecies: [Species]
+  allStarships: [Starship]
+}
+```
+
+With other types, the name of the type is arbitrary. But the root types, `Query` and `Mutation`, are special. They are the entry points for the API. The `Query` type is for read operations, and the `Mutation` type is for write operations. **Therefore, in order to make any requests to your API, a type of the name `Query` must be defined. Likewise, in order to make any changes to data with your API, a type of the name `Mutation` must be defined.**
+
+### Descriptions
+
+To provide more human-readable descriptions about your types and fields, you can add comments to your schema. In the SDL, comments are written inline with `""` or as a block description with triple quotes `"""` (similar to writing a code block with triple backticks in markdown syntax).
+
+```graphql schema.graphql -cwn
+"The Root mutation type"
+type Mutation {
+  "Create a new starship"
+  createStarship(name: String!): Starship
+  """
+  Edit the name of a starship
+  This is a longer comment to demonstrate syntax
+  """
+  editStarshipName(id: ID!, name: String!): Starship
+}
+```
+
+## Demand-driven design
+
+Now that we've established the syntax specification for writing a GraphQL schema, let's talk schema design. While there are many ways to skin a cat, one pattern that is commonly recommended is to design your GraphQL API with a demand-driven, or schema-first, approach. This means that your API is designed based on client needs rather than on the structure of your data. This approach reduces development time by allowing frontend and backend developers to work in parallel, and it ensures that the API is built with the client's needs at the forefront of the design.
+
+As frontend developers, this is where we can have a big impact in the API development. By working closely with backend developers, we can help define what shape we want the data to be in and what fields we need to request. Essentially, we can work together to agree on what the schema should look like and then go our separate ways to develop the frontend and backend in parallel without needing to wait on each other -- as long as both stick to the agreed upon schema, frontend can mock results while backend is still in development, and backend can develop the API with confidence in knowing what the final shape of the data needs to be.
+
+## The Graph
+
+So, if we're thinking about the data the client needs rather than being governed by the underlying data structures, we start to think about our data as a objects (like planets in the galaxy) that have relationships with other objects (people that live on those planets).
+
+If we think of each object as a `node` and each relationship as an `edge`, we can start to visualize our data as a graph. This is where the name "GraphQL" comes from -- it's a query language for traversing the "graph" of interconnected and related data.
+
+In other words, a graph in GraphQL terms is an interconnected set of data represented by a schema. It encompasses the relationships between different data types and how they can be queried or mutated. You can read more about what GraphQL is in the [official documentation](https://graphql.com/learn/what-is-graphql/).
+
+## Operations
+
+When you're ready to make a request to a GraphQL API, you'll need to write an `operation`. There are 3 types of `operations` in a GraphQL schema: `query`, `mutation`, and `subscription`. A `query` is a read operation (think GET). A `mutation` is a write operation (think PUT, POST, or DELETE). And a `subscription` is a long-lived, real-time operation that "listens" for changes to the requested data and sends updates to the client as they occur without the need for the client to send off another request (think [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)).
+
+<CodeWithTooltips>
+
+```js !code -cwn
+// !link[/GraphiQL playground/] https://graphql.org/swapi-graphql/?query=query%20GetPerson(%24id%3A%20ID!)%20%7B%0A%20%20person(id%3A%20%24id)%20%7B%0A%20%20%20%20id%0A%20%20%20%20name%0A%20%20%20%20birthYear%0A%20%20%20%20homeworld%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&operationName=GetPerson&variables=%7B%0A%20%20%22id%22%3A%20%22cGVvcGxlOjE%22%0A%7D
+// Try out this query in the GraphiQL playground
+// !pill[1:5]
+// !tooltip[/query/] operation type
+// !pill[7:15] 2
+// !tooltip[/GetPerson/] operation name
+// !pill[17:19] 3
+// !tooltip[/\$id/] variable
+// !pill[22:24] 4
+// !tooltip[/ID/] variable type
+query GetPerson($id: ID!) {
+  // !pill[10:12] 5
+  // !tooltip[/id/] variable name
+  // !pill[14:16] 3
+  // !tooltip[/\$id/] variable passed to the operation
+  person(id: $id) {
+    id
+    name
+    birthYear
+    homeworld {
+      name
+    }
+  }
+}
+```
+
+## !!tooltips operation type
+
+Operation type -- either `query`, `mutation`, or `subscription`
+
+## !!tooltips operation name
+
+The name of the operation -- written in PascalCase by convention
+
+## !!tooltips variable
+
+Variable value the client will provide, prefixed with `$`. Think of this as a function argument. You get to decide what the name is (just don't forget the `$`!).
+
+## !!tooltips variable type
+
+Variable type, as defined by the schema
+
+## !!tooltips variable name
+
+Variable name, as defined by the schema
+
+## !!tooltips variable passed to the operation
+
+Variable provided by the client. Must match the name of the variable (with the `$`) in the operation.
+
+</CodeWithTooltips>
+
+## Sending a request from the client
+
+Now that we have our query operation, let's try to fetch it from the browser instead of the GraphiQL playground. We can test this out straight from the browser console and use the `fetch` API.
+
+By nature, ALL GraphQL requests are sent as POST requests. This is because the query is sent as a JSON object in the body of the request. The query itself is a string, and the variables are an object.
+
+```js fetch-luke.js -cn
+// !focus(1:23)
+// !collapse(1:23)
+const fetcher = fetch(
+  "https://swapi-graphql.netlify.app/.netlify/functions/index",
+  {
+    // !pill[12:15] 2
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      // !mark(2:11)
+      query: `
+      query GetPerson($id: ID!) {
+        person(id: $id) {
+          id
+          name
+          birthYear
+          homeworld {
+            name
+          }
+        }
+      }
+    `,
+      variables: {
+        id: "cGVvcGxlOjE",
+      },
+    }),
+  },
+)
+
+// !collapse(1:5) collapsed
+async function fetchLuke() {
+  const response = await fetcher
+  const { data } = await response.json()
+  console.log(data)
+}
+
+await fetchLuke()
+```
+
+Success! We've successfully fetched Luke Skywalker's data from the SWAPI GraphQL API from the browser 🎉
+
+## What happens when you send a request?
+
+Now that we know what shape our query should take, let's take a look at what happens once we send a request to the server.
+
+<div className="w-full h-full aspect-video rounded">
+  <iframe
+    title="iadfqpxgv9"
+    frameborder="0"
+    allowfullscreen=""
+    class="wistia_embed"
+    name="wistia_embed"
+    src="//fast.wistia.net/embed/iframe/iadfqpxgv9?time=41&seo=true&amp;endVideoBehavior=reset&amp;fitStrategy=none"
+    allow="fullscreen"
+    style={{ width: "100%", height: "100%" }}
+  ></iframe>
+</div>
+
+<Callout>
+  This video is from one of Apollo GraphQL's free courses, [Lift-off II:
+  Resolvers](https://www.apollographql.com/tutorials/lift-off-part2/01-journey-of-a-graphql-query).
+  While their material is focused on using Apollo's GraphQL libraries, their
+  content is still a great resource for understanding GraphQL concepts and best
+  practices. For you JavaScript folks, I'd recomment checking out their
+  [fullstack series](https://www.apollographql.com/tutorials/lift-off-part1) or
+  their [client-side
+  course](https://www.apollographql.com/tutorials/client-side-graphql-react).
+</Callout>
+
+## Apollo Client
+
+Now while we CAN make our requests with the native `fetch` API, there are lots of third party libraries out there that extend upon its capabilities by adding features like caching, error handling, etc. Apollo Client and React Query are two libraries that are used at SpringHealth to make requests to our GraphQL APIs. They both have their own strengths and weaknesses, so it's worth checking out both to see which one fits your needs best.
+
+I've arbitrarily chosed to use Apollo Client for the rest of this post, but you can still take the concepts and apply them in React Query's "flavor". Just be sure to check out the [React Query docs](https://tanstack.com/query/latest/docs/framework/react/graphql) for more information.
+
+We won't go over initial set up of Apollo Client here, as I'm operating under the assumption that it's already been set up in your repos here at SpringHealth.
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1" className="border-none [&>h3]:m-0" >
+    <AccordionTrigger className="text-sm py-2 px-3 bg-sky-200 data-[state=open]:rounded-t data-[state=closed]:rounded m-0 ">Need a refresher on initial app setup with Apollo Client?</AccordionTrigger>
+    <AccordionContent className="border border-sky-500 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0">
+      
+      In the root layout page of your app, you'll want to create an instance of `ApolloClient` and wrap your app in an `ApolloProvider` component. This will give your app access to the Apollo Client instance and allow you to make requests to your GraphQL API. Your app might look a bit different, but the Apollo Client set up should look something like this:
+
+      ```tsx index.tsx -cn
+      import React from "react"
+      import { createRoot } from "react-dom/client"
+      import GlobalStyles from "./styles"
+      import Pages from "./pages"
+      // !mark(1:6)
+      import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client"
+
+      const client = new ApolloClient({
+        uri: "https://your-graphql-endpoint-here.com/",
+        cache: new InMemoryCache(),
+      });
+
+      const root = createRoot(document.getElementById('root')!);
+
+      // !mark(3,6)
+      root.render(
+      <React.StrictMode>
+        <ApolloProvider client={client}>
+          <GlobalStyles />
+          <Pages />
+        </ApolloProvider>
+      </React.StrictMode>
+      );
+      ```
+
+    </AccordionContent>
+
+  </AccordionItem>
+</Accordion>
+
+### Codegen
+
+Since we use TypeScript here at Springhealth, let's go over some types. Our client apps dont' know anything about our GraphQL schema and it would be a pain to manually write the types for every query and mutation we make. This is where codegen comes in. Codegen is a tool that generates TypeScript types based on your GraphQL schema and operations. This way, you can write your queries and mutations in a `.graphql` file and have the types generated for you. Plus, any time the schema is changed in the backend, you don't have to worry about manually updating all of your types. Let codegen do that for you.
+
+At a high level, here's how it works:
+
+1. Install necessary packages and set up a `generate` command in the `package.json` scripts to launch the Code Generator.
+2. Create a configuration file that guides the codegen process. At its most basic, this specifies the path to the GraphQL schema, the files in our frontend app it should inspect for GraphQL operations, and where to output the necessary TypeScript types.
+3. Run our codegen command.
+4. Check out the types it generated for us!
+
+We're not going to go through all of the steps to set up and run codegen here, but Apollo has a [step-by-step guide](https://www.apollographql.com/tutorials/client-side-graphql-react/05-codegen) you can follow. These steps use the `graphql-codegen` libraries, which are not specific to Apollo. You can use them with any GraphQL client implementation.
+
+import { CodeWithTabs } from "@/components/code/code-with-tabs"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1" className="border-none [&>h3]:m-0" >
+    <AccordionTrigger className="text-sm py-2 px-3 bg-sky-200 data-[state=open]:rounded-t data-[state=closed]:rounded m-0">Want to see an example configuration of codegen?</AccordionTrigger>
+    <AccordionContent className="border border-sky-500 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0 ">
+      
+      In the root of your repo, create a `codegen.ts` file and add the following configuration:
+
+      <div className="h-[435px]">
+        <CodeWithTabs>
+
+        ```ts !!tabs codegen.ts -cn
+        import { CodegenConfig } from "@graphql-codegen/cli";
+
+        const config: CodegenConfig = {
+          schema: "https://your-graphql-endpoint-here.com/", // your GraphQL server endpoint
+          documents: ["src/**/*.tsx"], // where all of your queries and mutations in your app can be found
+          generates: {
+            // where to output the generated types
+            "./src/__generated__/": {
+              preset: "client",
+              presetConfig: {
+                gqlTagName: "gql", // optional, defaults to `graphql` (Apollo tends to use `gql`, though)
+              },
+            },
+          }
+          ignoreNoDocuments: true,
+        };
+
+        export default config;
+        ```
+
+        ```json !!tabs package.json -cn
+        {
+          "scripts": {
+            "generate": "graphql-codegen"
+          },
+          "dependencies": {
+            // ...other dependencies
+            "@graphql-codegen/cli": "^5.0.2",
+            "@graphql-codegen/client-preset": "^4.3.2",
+            // ...other dependencies
+          }
+        }
+        ```
+
+        </CodeWithTabs>
+      </div>
+
+    </AccordionContent>
+
+  </AccordionItem>
+</Accordion>
+
+### Sending a request
+
+With Apollo Client configured and our types generated, we can now make a request to our GraphQL API. Let's fetch Luke Skywalker's data from the SWAPI GraphQL API using Apollo Client.
+
+<CodeWithTooltips>
+
+```tsx !code profile.tsx -cn
+import { Layout } from "../components"
+import TrackCard from "../containers/track-card"
+// !focus(1:19)
+import { useQuery } from "@apollo/client"
+// !pill[10:12] 2
+// !tooltip[/gql/] gql
+import { gql } from "../__generated__/"
+
+// !pill[16:18] 2
+const TRACKS = gql(`
+  query GetTracks {
+    tracksForHome {
+      id
+      title
+      thumbnail
+      length
+      modulesCount
+      author {
+        id
+        name
+        photo
+      }
+    }
+  }
+`);
+
+const Profile = () => {
+  // !focus(1)
+  // !tooltip[/useQuery/] useQuery
+  const { loading, error, data } = useQuery(TRACKS)
+
+  if (error) {
+    return <p>Error: {error.message}</p>
+  }
+
+  if (loading) return <p>Loading...</p>
+
+  if (data) {
+    return (
+      <Layout>
+        {data.tracksForHome?.map((track) => (
+          <TrackCard key={track.id} track={track} />
+        ))}
+      </Layout>
+    )
+  }
+}
+```
+
+## !!tooltips gql
+
+<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
+Autogenerated by codegen; named by `gqlTagName` in your codegen config.
+</div>
+
+## !!tooltips useQuery
+
+<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
+The [`useQuery` hook](https://www.apollographql.com/docs/react/data/queries#executing-a-query) returns an object with three properties: `loading`, `error`, and `data`. `loading` is a boolean that indicates whether the request is still in progress. `error` is an object that contains information about any errors that occurred during the request. `data` is the response data from the server.
+
+If your operation needs any variables, you can pass them in an object as the second argument to the `useQuery` hook. 
+</div>
+
+</CodeWithTooltips>

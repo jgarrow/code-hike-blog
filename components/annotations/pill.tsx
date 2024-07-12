@@ -7,6 +7,7 @@ const colors = [
   "bg-violet-500/20",
   "bg-fuchsia-500/20",
   "bg-pink-500/20",
+  "bg-orange-500/20"
   // if adding more colors, dont forget to update global.css
 ]
 

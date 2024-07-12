@@ -22,6 +22,25 @@ import { wordWrap } from "./annotations/word-wrap"
 import { line } from "./annotations/line"
 import { tokenTransitions } from "./annotations/token-transitions"
 import { focus } from "./annotations/focus"
+import { tooltip } from "./annotations/tooltip"
+
+export function getHandlers(flags: string[]) {
+  return [
+    pill,
+    fold,
+    link,
+    focus,
+    mark,
+    ruler,
+    flags.includes("a") && tokenTransitions,
+    flags.includes("n") && lineNumbers,
+    ...collapse,
+    line,
+    flags.includes("w") && wordWrap,
+    callout,
+    tooltip,
+  ].filter(Boolean) as AnnotationHandler[]
+}
 
 export async function Code({
   codeblock,
@@ -35,10 +54,11 @@ export async function Code({
   const highlighted = await highlight(codeblock, theme, {
     annotationPrefix: flags.includes("p") ? "!!" : undefined,
   })
+
   return <HighCode highlighted={highlighted} {...rest} />
 }
 
-export function HighCode({
+export async function HighCode({
   highlighted,
   className,
   style,
@@ -50,20 +70,7 @@ export function HighCode({
   const { title, flags } = extractFlags(highlighted)
   const h = { ...highlighted, meta: title }
 
-  const handlers = [
-    pill,
-    fold,
-    link,
-    focus,
-    mark,
-    ruler,
-    flags.includes("a") && tokenTransitions,
-    flags.includes("n") && lineNumbers,
-    ...collapse,
-    line,
-    flags.includes("w") && wordWrap,
-    callout,
-  ].filter(Boolean) as AnnotationHandler[]
+  const handlers = getHandlers(flags)
 
   const pre = (
     <Pre

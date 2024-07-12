@@ -2,7 +2,9 @@
 title: field
 ---
 
-A unit of data that belongs to a `type` in a schema. Every GraphQL query or mutation requests one or more fields.
+import { GlossaryExternalLink } from "@/components/glossary-external-link"
+
+A unit of data that belongs to a `type` in a schema. Every GraphQL query or mutation requests one or more fields. This example has a `Person` type with three fields: `id`, `name`, and `age`. To mark a field as non-nullable, add an exclamation mark (`!`) after the type.
 
 ```graphql
 type Person {
@@ -12,4 +14,4 @@ type Person {
 }
 ```
 
-[Learn more about fields.](https://graphql.com/learn/the-query/#querying-with-types-and-fields)
+<GlossaryExternalLink href="https://graphql.com/learn/the-query/#querying-with-types-and-fields">Learn more about fields</GlossaryExternalLink>

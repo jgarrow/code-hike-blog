@@ -19,14 +19,16 @@ async function Code({ codeblock }: { codeblock: RawCode }) {
   return <Pre code={highlighted} className="bg-transparent m-0 p-0" />
 }
 
-async function CodeWithTooltips(props: unknown) {
+export async function CodeWithTooltips(props: unknown) {
   const { code, tooltips = [] } = parseProps(
     props,
     Block.extend({ code: CodeBlock, tooltips: z.array(Block).optional() }),
   )
-  const highlighted = await highlight(code, "github-dark")
-
+  // const highlighted = await highlight(code, "github-dark")
+  const highlighted = await highlight(code, theme)
+  console.log('tooltips: ', tooltips  )
   highlighted.annotations = highlighted.annotations.map((a) => {
+    console.log({a})
     const note = tooltips.find((n) => n.title === a.query)
     if (!note) return a
     return {
@@ -39,9 +41,13 @@ async function CodeWithTooltips(props: unknown) {
   })
   return (
     <Pre
-      className="m-0 px-2 bg-zinc-950"
+      // className="m-0 px-2 bg-zinc-950"
+      className="m-0 px-2 bg-editor-background rounded-none group flex-1 selection:bg-editor-selectionBackground"
       code={highlighted}
       handlers={[tooltip]}
+      style={{
+        backgroundColor: "var(--bg-color)",
+      }}
     />
   )
 }
@@ -50,6 +56,7 @@ const tooltip: AnnotationHandler = {
   name: "tooltip",
   Inline: ({ children, annotation }) => {
     const { query, data } = annotation
+    console.log({annotation})
     return (
       <TooltipProvider delayDuration={300}>
         <Tooltip>

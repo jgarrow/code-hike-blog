@@ -28,8 +28,10 @@ export function GlossaryTooltip({
             {term}
           </span>
         </TooltipTrigger>
-        <TooltipContent align="center" className="max-w-[400px]">
-          <div className="border-b border-b-slate-400 py-2 font-semibold w-full">{term}</div>
+        <TooltipContent align="center" className="max-w-[400px] pb-2">
+          <div className="border-b border-b-slate-400 py-2 font-semibold w-full">
+            {term}
+          </div>
           {children}
         </TooltipContent>
       </Tooltip>

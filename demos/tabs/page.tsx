@@ -10,7 +10,7 @@ export default async function Page() {
 
 const Schema = Block.extend({ tabs: z.array(CodeBlock) })
 
-async function CodeWithTabs(props: unknown) {
+export async function CodeWithTabs(props: unknown) {
   const { tabs } = parseProps(props, Schema)
   return <CodeTabs tabs={tabs} />
 }
