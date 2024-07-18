@@ -39,7 +39,7 @@ function MonthGroup({ month }: { month: Month }) {
 export function generateMetadata() {
   return {
     title: "Blog | Code Hike",
-    description: "Code Hike's blog",
+    description: "Code Hike blog",
   }
 }
 

@@ -16,25 +16,25 @@ export function NavBar({ version }: { version: string }) {
       collapsibleSidebar={true}
       links={[
         {
-          href: "https://github.com/code-hike/codehike",
+          href: "https://github.com/jgarrow/code-hike-blog",
           label: "Github",
           icon: <GithubIcon className="h-5 w-5" />,
           external: true,
         },
       ]}
       items={[
-        {
-          url: "/docs",
-          text: "Docs",
-        },
-        {
-          url: "/blog",
-          text: "Blog",
-        },
-        {
-          url: "/play",
-          text: "Playground",
-        },
+        // {
+        //   url: "/docs",
+        //   text: "Docs",
+        // },
+        // {
+        //   url: "/blog",
+        //   text: "Blog",
+        // },
+        // {
+        //   url: "/play",
+        //   text: "Playground",
+        // },
       ]}
     >
     </Nav>

@@ -1,5 +1,3 @@
-import { CodeHikeLogo } from "../../../ui/nav"
-
 const title = "From Markdown to Video"
 const description = "Animated code walkthroughs with Code Hike and Remotion"
 
@@ -12,7 +10,6 @@ export default function Page() {
       >
         <div className="flex-1 flex items-start">
           <span className="flex items-center text-4xl font-bold text-accent-foreground/90">
-            <CodeHikeLogo className="h-12 w-12" /> Code Hike's blog
           </span>
           <div></div>
         </div>

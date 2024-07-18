@@ -47,7 +47,7 @@ function Author({ name }: { name: string }) {
     return (
       <Link
         className="inline-flex items-center gap-2 no-underline hover:bg-primary/10 rounded not-prose p-2 -m-2 mb-4"
-        href="https://twitter.com/pomber"
+        href="https://twitter.com/JanessaGarrow"
       >
         <Image
           src={pomber}
@@ -58,8 +58,8 @@ function Author({ name }: { name: string }) {
           className="rounded-full"
         />
         <div>
-          <div className="font-semibold text-sm">Rodrigo Pombo</div>
-          <div className="text-primary/60 text-sm">@pomber</div>
+          <div className="font-semibold text-sm">Janessa Garrow</div>
+          <div className="text-primary/60 text-sm">@JanessaGarrow</div>
         </div>
       </Link>
     )
