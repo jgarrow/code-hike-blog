@@ -883,13 +883,13 @@ The `cache` argument is the current state of our Apollo Client cache. This is wh
 
 ## !!tooltips updateQuery
 
-`cache.updateQuery` is a method that allows us to both read and write to the cache with a single method call. If you need to read data from one query in the cache and write to a different object in the cache, you might want to use `cache.readQuery` and `cache.writeQuery` instead. 
+`cache.updateQuery` is a method that allows us to both read from and write a query to the cache with a single method call. You can also do the read and write separately via `cache.readQuery` and `cache.writeQuery`. 
 
 Check out the [Apollo docs](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for more information on how to use these methods.
 
 ## !!tooltips updateFragment
 
-`cache.updateFragment` is a method that allows us to both read and write to the cache with a single method call. If you need to read data from one query in the cache and write to a different object in the cache, you might want to use `cache.readFragment` and `cache.writeFragment` instead.
+`cache.updateFragment` is a method that allows us to both read from and write to any normalized cache object with a single method call. You can also do the read and write separately via`cache.readFragment` and `cache.writeFragment`.
 
 Check out the [Apollo docs](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for more information on how to use these methods.
 
