@@ -31,7 +31,7 @@ const Schema = Block.extend({
 export default function Page() {
   const { steps } = parseRoot(Content, Schema)
   return (
-    <SelectionProvider className="flex gap-4">
+    <SelectionProvider className="flex gap-4 col-span-3">
       <div className="flex-1 mt-32 mb-[90vh] ml-2 prose prose-invert">
         {steps.map((step, i) => (
           <Selectable

@@ -26,7 +26,7 @@ export async function CodeWithTooltips(props: unknown) {
   )
   // const highlighted = await highlight(code, "github-dark")
   const highlighted = await highlight(code, theme)
-  console.log('tooltips: ', tooltips  )
+
   highlighted.annotations = highlighted.annotations.map((a) => {
     console.log({a})
     const note = tooltips.find((n) => n.title === a.query)

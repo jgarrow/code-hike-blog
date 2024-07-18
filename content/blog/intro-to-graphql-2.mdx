@@ -1,0 +1,1088 @@
+---
+title: Intro to GraphQL
+description: An overview of the basics of GraphQL for frontend developers
+date: 2024-07-10
+authors: [jgarrow]
+className: min-w-[700px] px-16
+draft: true
+---
+
+import { Code, Columns } from "./remotion/code"
+import { Callout } from "next-docs-ui/components/callout"
+import { CodeWithTooltips } from "@/components/code-with-tooltips"
+import { Scrollycoding } from "@/components/code/scrollycoding"
+import { GlossaryTooltip } from "@/components/glossary-tooltip"
+
+import FieldTooltipContent from "@/glossary/graphql/field.mdx"
+import TypeTooltipContent from "@/glossary/graphql/type.mdx"
+import ScalarTooltipContent from "@/glossary/graphql/scalar.mdx"
+import FragmentTooltipContent from "@/glossary/graphql/fragment.mdx"
+
+GraphQL is a query language and specification for APIs that aims to enable clients to request specific data. This specificity in requests promotes efficiency and flexibility in data retrieval.
+
+GraphQL was developed by Facebook in 2012 and released as an open-source project in 2015. Since then, it has gained popularity as an alternative to REST APIs. In this post, we'll cover some of the basics of GraphQL and some best practices when consuming a GraphQL API from a frontend application.
+
+<Callout>
+  We'll be using the public Star Wars GraphQL API (SWAPI) in the examples here
+  to demonstrate some of the concepts. You can find the [API documentation and
+  GraphiQL playground here](https://graphql.org/swapi-graphql/).
+</Callout>
+
+## Schema Definition Language (SDL)
+
+A GraphQL schema is a collection of types that define when the API can and can't do. If it's not in the schema, clients can't request it. Think of the schema as a menu at a restaurant. It has a list of all of the things you're allowed to order. If it's not on the menu, you can't order it.
+
+The shape of the schema follows a specification syntax called the Schema Definition Language (SDL). This is the syntax that a GraphQL API's schema will ALWAYS take, regardless of what programming language the underlying API is written in or what third-party GraphQL libraries you may be using.
+
+<CodeWithTooltips>
+
+```js !code schema.graphql -cwn
+// !pill[1:4] 6
+// !pill[6:13]
+// !tooltip[/type/] type
+// !tooltip[/Starship/] type name
+type Starship {
+  // !pill[3:4] 5
+  // !pill[7:8] 2
+  id: ID!
+  // !pill[3:6] 5
+  // !pill[9:14] 2
+  // !tooltip[/name/] field
+  name: String
+  // !pill[3:10] 5
+  // !pill[13:21] 2
+  // !pill[22] 4
+  // !tooltip[/Mission/] scalar
+  missions: [Mission]!
+}
+```
+
+## !!tooltips type
+
+`type` keyword
+
+## !!tooltips type name
+
+Type name -- written in PascalCase by convention
+
+## !!tooltips field
+
+Field name
+
+## !!tooltips scalar
+
+Field type
+
+</CodeWithTooltips>
+
+At its core, a schema is made up of object `types` that contain `fields`. The fields are the individual pieces of data that can be requested. Each <GlossaryTooltip term="field"><FieldTooltipContent /></GlossaryTooltip> has a `type` that defines what kind of data it is. The <GlossaryTooltip term="type"><TypeTooltipContent /></GlossaryTooltip> can be a <GlossaryTooltip term="scalar"><ScalarTooltipContent /></GlossaryTooltip> (like a string, number, or boolean), an object (another type in the schema), or a list of other types.
+
+### Root fields
+
+The entry points for a GraphQL API are called tge "root" types. These are the top-level fields that define what can be accessed. In the Star Wars API, the root fields are `allFilms`, `allPeople`, `allPlanets`, `allSpecies`, and `allStarships`.
+
+```js schema.graphql -cwn
+// !pill[6:10]
+type Query {
+  allFilms: [Film]
+  allPeople: [Person]
+  allPlanets: [Planet]
+  allSpecies: [Species]
+  allStarships: [Starship]
+}
+```
+
+With other types, the name of the type is arbitrary. But the root types, `Query` and `Mutation`, are special. They are the entry points for the API. The `Query` type is for read operations, and the `Mutation` type is for write operations. **Therefore, in order to make any requests to your API, a type of the name `Query` must be defined. Likewise, in order to make any changes to data with your API, a type of the name `Mutation` must be defined.**
+
+### Descriptions
+
+To provide more human-readable descriptions about your types and fields, you can add comments to your schema. In the SDL, comments are written inline with `""` or as a block description with triple quotes `"""` (similar to writing a code block with triple backticks in markdown syntax).
+
+```graphql schema.graphql -cwn
+"The Root mutation type"
+type Mutation {
+  "Create a new starship"
+  createStarship(name: String!): Starship
+  """
+  Edit the name of a starship
+  This is a longer comment to demonstrate syntax
+  """
+  editStarshipName(id: ID!, name: String!): Starship
+}
+```
+
+## Demand-driven design
+
+Now that we've established the syntax specification for writing a GraphQL schema, let's talk schema design. While there are many ways to skin a cat, one pattern that is commonly recommended is to design your GraphQL API with a demand-driven, or schema-first, approach. This means that your API is designed based on client needs rather than on the structure of your data. This approach reduces development time by allowing frontend and backend developers to work in parallel, and it ensures that the API is built with the client's needs at the forefront of the design.
+
+As frontend developers, this is where we can have a big impact in the API development. By working closely with backend developers, we can help define what shape we want the data to be in and what fields we need to request. Essentially, we can work together to agree on what the schema should look like and then go our separate ways to develop the frontend and backend in parallel without needing to wait on each other -- as long as both stick to the agreed upon schema, frontend can mock results while backend is still in development, and backend can develop the API with confidence in knowing what the final shape of the data needs to be.
+
+## The Graph
+
+So, if we're thinking about the data the client needs rather than being governed by the underlying data structures, we start to think about our data as a objects (like planets in the galaxy) that have relationships with other objects (people that live on those planets).
+
+If we think of each object as a `node` and each relationship as an `edge`, we can start to visualize our data as a graph. This is where the name "GraphQL" comes from -- it's a query language for traversing the "graph" of interconnected and related data.
+
+In other words, a graph in GraphQL terms is an interconnected set of data represented by a schema. It encompasses the relationships between different data types and how they can be queried or mutated. You can read more about what GraphQL is in the [official documentation](https://graphql.com/learn/what-is-graphql/).
+
+## Operations
+
+When you're ready to make a request to a GraphQL API, you'll need to write an `operation`. There are 3 types of `operations` in a GraphQL schema: `query`, `mutation`, and `subscription`. A `query` is a read operation (think GET). A `mutation` is a write operation (think PUT, POST, or DELETE). And a `subscription` is a long-lived, real-time operation that "listens" for changes to the requested data and sends updates to the client as they occur without the need for the client to send off another request (think [WebSockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API)).
+
+<CodeWithTooltips>
+
+```js !code -cwn
+// !link[/GraphiQL playground/] https://graphql.org/swapi-graphql/?query=query%20GetPerson(%24id%3A%20ID!)%20%7B%0A%20%20person(id%3A%20%24id)%20%7B%0A%20%20%20%20id%0A%20%20%20%20name%0A%20%20%20%20birthYear%0A%20%20%20%20homeworld%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&operationName=GetPerson&variables=%7B%0A%20%20%22id%22%3A%20%22cGVvcGxlOjE%22%0A%7D
+// Try out this query in the GraphiQL playground
+// !pill[1:5]
+// !tooltip[/query/] operation type
+// !pill[7:15] 2
+// !tooltip[/GetPerson/] operation name
+// !pill[17:19] 3
+// !tooltip[/\$id/] variable
+// !pill[22:24] 4
+// !tooltip[/ID/] variable type
+query GetPerson($id: ID!) {
+  // !pill[10:12] 5
+  // !tooltip[/id/] variable name
+  // !pill[14:16] 3
+  // !tooltip[/\$id/] variable passed to the operation
+  person(id: $id) {
+    id
+    name
+    birthYear
+    homeworld {
+      name
+    }
+  }
+}
+```
+
+## !!tooltips operation type
+
+Operation type -- either `query`, `mutation`, or `subscription`
+
+## !!tooltips operation name
+
+The name of the operation -- written in PascalCase by convention
+
+## !!tooltips variable
+
+Variable value the client will provide, prefixed with `$`. Think of this as a function argument. You get to decide what the name is (just don't forget the `$`!).
+
+## !!tooltips variable type
+
+Variable type, as defined by the schema
+
+## !!tooltips variable name
+
+Variable name, as defined by the schema
+
+## !!tooltips variable passed to the operation
+
+Variable provided by the client. Must match the name of the variable (with the `$`) in the operation.
+
+</CodeWithTooltips>
+
+## Sending a request from the client
+
+Now that we have our query operation, let's try to fetch it from the browser instead of the GraphiQL playground. We can test this out straight from the browser console and use the `fetch` API.
+
+By nature, ALL GraphQL requests are sent as POST requests. This is because the query is sent as a JSON object in the body of the request. The query itself is a string, and the variables are an object.
+
+```js fetch-luke.js -cn
+// !focus(1:23)
+// !collapse(1:23)
+const fetcher = fetch(
+  "https://swapi-graphql.netlify.app/.netlify/functions/index",
+  {
+    // !pill[12:15] 2
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      // !mark(2:11)
+      query: `
+      query GetPerson($id: ID!) {
+        person(id: $id) {
+          id
+          name
+          birthYear
+          homeworld {
+            name
+          }
+        }
+      }
+    `,
+      variables: {
+        id: "cGVvcGxlOjE",
+      },
+    }),
+  },
+)
+
+// !collapse(1:5) collapsed
+async function fetchLuke() {
+  const response = await fetcher
+  const { data } = await response.json()
+  console.log(data)
+}
+
+await fetchLuke()
+```
+
+Success! We've successfully fetched Luke Skywalker's data from the SWAPI GraphQL API from the browser 🎉
+
+## What happens when you send a request?
+
+Now that we know what shape our query should take, let's take a look at what happens once we send a request to the server.
+
+<div className="w-full h-full aspect-video rounded">
+  <iframe
+    title="iadfqpxgv9"
+    frameborder="0"
+    allowfullscreen=""
+    class="wistia_embed"
+    name="wistia_embed"
+    src="//fast.wistia.net/embed/iframe/iadfqpxgv9?time=41&seo=true&amp;endVideoBehavior=reset&amp;fitStrategy=none"
+    allow="fullscreen"
+    style={{ width: "100%", height: "100%" }}
+  ></iframe>
+</div>
+
+<Callout>
+  This video is from one of Apollo GraphQL's free courses, [Lift-off II:
+  Resolvers](https://www.apollographql.com/tutorials/lift-off-part2/01-journey-of-a-graphql-query).
+  While their material is focused on using Apollo's GraphQL libraries, their
+  content is still a great resource for understanding GraphQL concepts and best
+  practices. For you JavaScript folks, I'd recomment checking out their
+  [fullstack series](https://www.apollographql.com/tutorials/lift-off-part1) or
+  their [client-side
+  course](https://www.apollographql.com/tutorials/client-side-graphql-react).
+</Callout>
+
+## Apollo Client
+
+Now while we CAN make our requests with the native `fetch` API, there are lots of third party libraries out there that extend upon its capabilities by adding features like caching, error handling, etc. Apollo Client and React Query are two libraries that are used at SpringHealth to make requests to our GraphQL APIs. They both have their own strengths and weaknesses, so it's worth checking out both to see which one fits your needs best.
+
+I've arbitrarily chosed to use Apollo Client for the rest of this post, but you can still take the concepts and apply them in React Query's "flavor". Just be sure to check out the [React Query docs](https://tanstack.com/query/latest/docs/framework/react/graphql) for more information.
+
+We won't go over initial set up of Apollo Client here, as I'm operating under the assumption that it's already been set up in your repos here at SpringHealth.
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1" className="border-none [&>h3]:m-0" >
+    <AccordionTrigger className="text-sm py-2 px-3 bg-sky-200 data-[state=open]:rounded-t data-[state=closed]:rounded m-0 ">Need a refresher on initial app setup with Apollo Client?</AccordionTrigger>
+    <AccordionContent className="border border-sky-500 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0">
+      
+      In the root layout page of your app, you'll want to create an instance of `ApolloClient` and wrap your app in an `ApolloProvider` component. This will give your app access to the Apollo Client instance and allow you to make requests to your GraphQL API. Your app might look a bit different, but the Apollo Client set up should look something like this:
+
+      ```tsx index.tsx -cn
+      import React from "react"
+      import { createRoot } from "react-dom/client"
+      import GlobalStyles from "./styles"
+      import Pages from "./pages"
+      // !mark(1:6)
+      import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client"
+
+      const client = new ApolloClient({
+        uri: "https://your-graphql-endpoint-here.com/",
+        cache: new InMemoryCache(),
+      });
+
+      const root = createRoot(document.getElementById('root')!);
+
+      // !mark(3,6)
+      root.render(
+      <React.StrictMode>
+        <ApolloProvider client={client}>
+          <GlobalStyles />
+          <Pages />
+        </ApolloProvider>
+      </React.StrictMode>
+      );
+      ```
+
+    </AccordionContent>
+
+  </AccordionItem>
+</Accordion>
+
+## Codegen
+
+Since we use TypeScript here at Springhealth, let's go over some types. Our client apps dont' know anything about our GraphQL schema and it would be a pain to manually write the types for every query and mutation we make. This is where codegen comes in. Codegen is a tool that generates TypeScript types based on your GraphQL schema and operations. This way, you can write your queries and mutations in a `.graphql` file and have the types generated for you. Plus, any time the schema is changed in the backend, you don't have to worry about manually updating all of your types. Let codegen do that for you.
+
+At a high level, here's how it works:
+
+1. Install necessary packages and set up a `generate` command in the `package.json` scripts to launch the Code Generator.
+2. Create a configuration file that guides the codegen process. At its most basic, this specifies the path to the GraphQL schema, the files in our frontend app it should inspect for GraphQL operations, and where to output the necessary TypeScript types.
+3. Run our codegen command.
+4. Check out the types it generated for us!
+
+We're not going to go through all of the steps to set up and run codegen here, but Apollo has a [step-by-step guide](https://www.apollographql.com/tutorials/client-side-graphql-react/05-codegen) you can follow. These steps use the `graphql-codegen` libraries, which are not specific to Apollo. You can use them with any GraphQL client implementation.
+
+import { CodeWithTabs } from "@/components/code/code-with-tabs"
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-1" className="border-none [&>h3]:m-0" >
+    <AccordionTrigger className="text-sm py-2 px-3 bg-blue-400 data-[state=open]:rounded-t data-[state=closed]:rounded m-0 text-white">Want to see an example configuration of codegen?</AccordionTrigger>
+    <AccordionContent className="border border-blue-400 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0 ">
+      
+      In the root of your repo, create a `codegen.ts` file and add the following configuration:
+
+      <div className="h-[435px]">
+        <CodeWithTabs>
+
+        ```ts !!tabs codegen.ts -cn
+        import { CodegenConfig } from "@graphql-codegen/cli";
+
+        const config: CodegenConfig = {
+          schema: "https://your-graphql-endpoint-here.com/", // your GraphQL server endpoint
+          documents: ["src/**/*.tsx"], // where all of your queries and mutations in your app can be found
+          generates: {
+            // where to output the generated types
+            "./src/__generated__/": {
+              preset: "client",
+              presetConfig: {
+                gqlTagName: "gql", // optional, defaults to `graphql` (Apollo tends to use `gql`, though)
+              },
+            },
+          }
+          ignoreNoDocuments: true,
+        };
+
+        export default config;
+        ```
+
+        ```json !!tabs package.json -cn
+        {
+          "scripts": {
+            "generate": "graphql-codegen"
+          },
+          "dependencies": {
+            // ...other dependencies
+            "@graphql-codegen/cli": "^5.0.2",
+            "@graphql-codegen/client-preset": "^4.3.2",
+            // ...other dependencies
+          }
+        }
+        ```
+
+        </CodeWithTabs>
+      </div>
+
+    </AccordionContent>
+
+  </AccordionItem>
+</Accordion>
+
+## Sending a request with Apollo Client
+
+With Apollo Client configured and our types generated, we can now make a request to our GraphQL API. Let's fetch Luke Skywalker's data from the SWAPI GraphQL API using Apollo Client.
+
+<CodeWithTooltips>
+
+```tsx !code profile.tsx -cn
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import PersonDetail from "../components/person-detail"
+// !focus(1:24)
+import { useQuery } from "@apollo/client"
+// !pill[10:12] 2
+// !tooltip[/gql/] gql
+import { gql } from "../__generated__/"
+
+// !pill[20:22] 2
+// !pill[7:16] 3
+// !pill(2[19:27],3[16:24])
+const GET_PERSON = gql(`
+  query GetPerson($personId: ID!) {
+    person(id: $personId) {
+      id
+      name
+      birthYear
+      eyeColor
+      hairColor
+      gender
+      height
+      mass
+      skinColor
+      species {
+        name
+      }
+      homeworld {
+        name
+      }
+    }
+  }
+`)
+
+const Person = () => {
+  const { personId = "" } = useParams()
+  // !focus(1:3)
+  // !pill[45:54] 3
+  // !tooltip[/useQuery/] useQuery
+  const { loading, error, data } = useQuery(GET_PERSON, {
+    // !pill[18:25]
+    variables: { personId },
+  })
+
+  if (error) return <p>Error: {error.message}</p>
+
+  if (loading) return <p>Loading...</p>
+
+  if (data) {
+    return (
+      <Layout>
+        <PersonDetail person={data.person} />
+      </Layout>
+    )
+  }
+}
+
+export default Person
+```
+
+## !!tooltips gql
+
+<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
+  Autogenerated by codegen; named by `gqlTagName` in your codegen config.
+</div>
+
+## !!tooltips useQuery
+
+<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
+The [`useQuery` hook](https://www.apollographql.com/docs/react/data/queries#executing-a-query) returns an object with three properties: `loading`, `error`, and `data`. `loading` is a boolean that indicates whether the request is still in progress. `error` is an object that contains information about any errors that occurred during the request. `data` is the response data from the server.
+
+If your operation needs any variables, you can pass them in an object as the second argument to the `useQuery` hook.
+
+</div>
+
+</CodeWithTooltips>
+
+<Callout>
+Don't forget to re-run your codegen command every time you make changes to your queries or mutations. This will ensure that your types are always up to date with your schema.
+</Callout>
+
+<Scrollycoding>
+
+## !!steps Import statements
+
+Let's make a component that displays some data about a specific track. We'll be requesting data, so we'll need to import the `useQuery` hook from Apollo Client and the `gql` tag from our generated types.
+
+```tsx ! profile.tsx -cna
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+// !focus(1:2)
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+```
+
+## !!steps Create the query document
+
+Next, we'll create a query document using the `gql` tag. This document will request data about a specific track, including the track's title, author, thumbnail, length, modules, and more.
+
+Remember, `gql` is a function generated by codegen (renamed from the default `graphql` in our `codegen.ts` file). We pass it our query string and it returns a document that Apollo Client can use to make the request. Codegen will also generate types for the query, so we can use them in our component.
+
+```tsx ! profile.tsx -cna
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+// !focus(1:27)
+import { gql } from "../__generated__/"
+
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+        id
+        name
+        photo
+      }
+      thumbnail
+      length
+      modulesCount
+      description
+      numberOfViews
+      modules {
+        id
+        title
+        length
+        content
+        videoUrl
+      }
+    }
+  }
+`)
+```
+
+## !!steps Use the useQuery hook
+
+Now that we have our query document, we can use the `useQuery` hook to make the request. We pass the `GET_TRACK` document to `useQuery`, along with any variables the query requires. The hook returns an object with three properties: `loading`, `error`, and `data`.
+
+```tsx ! profile.tsx -cna
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+
+// !collapse(1:24) collapsed
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+        id
+        name
+        photo
+      }
+      thumbnail
+      length
+      modulesCount
+      description
+      numberOfViews
+      modules {
+        id
+        title
+        length
+        content
+        videoUrl
+      }
+    }
+  }
+`)
+
+const Track = () => {
+  const { trackId = "" } = useParams()
+  // !focus(1:3)
+  const { loading, error, data } = useQuery(GET_TRACK, {
+    variables: { trackId },
+  })
+}
+```
+
+## !!steps Handle the response
+
+Finally, we can handle the response from the server. If there's an error, we'll display an error message. If the request is still loading, we'll display a loading message. If we have data, we'll render the `TrackDetail` component with the track data.
+
+```tsx ! profile.tsx -cna
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+
+// !collapse(1:24) collapsed
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+        id
+        name
+        photo
+      }
+      thumbnail
+      length
+      modulesCount
+      description
+      numberOfViews
+      modules {
+        id
+        title
+        length
+        content
+        videoUrl
+      }
+    }
+  }
+`)
+
+const Track = () => {
+  const { trackId = "" } = useParams()
+  const { loading, error, data } = useQuery(GET_TRACK, {
+    variables: { trackId },
+  })
+
+  // !focus(1:11)
+  if (error) return <p>Error: {error.message}</p>
+
+  if (loading) return <p>Loading...</p>
+
+  if (data) {
+    return (
+      <Layout>
+        <TrackDetail track={data?.track} />
+      </Layout>
+    )
+  }
+}
+```
+
+</Scrollycoding>
+
+## Fragments
+
+This is the most basic example of making a request with Apollo Client. But what happens when we have a nested component that needs some data from the same query? We could pass the data down as props, but that can get messy. Instead, we can use <GlossaryTooltip term="fragments"><FragmentTooltipContent /></GlossaryTooltip> and colocate them with the components that need them. This way, we can keep our components clean and only request the data we need where we need it. This will help us avoid overfetching data and avoid unnecessary prop drilling or storing data in React context.
+
+In the example below, we're creating a fragment that we're calling `TrackAuthor` that contains the `id`, `name`, and `photo` of the author of a track. `Author` would be an existing type in our GraphQL schema. We can then use this fragment in our query to request the author data for each track.
+
+```graphql -cwn
+fragment TrackAuthor on Author {
+  id
+  name
+  photo
+}
+```
+
+To use our fragment, we use a triple period (`...`) syntax in an operation that needs the fragments fields.
+
+import { Spotlight } from "@/components/code/spotlight"
+
+<Spotlight>
+
+## !!steps With fragments
+
+```graphql ! -can
+query GetTrack($trackId: ID!) {
+  track(id: $trackId) {
+    id
+    title
+    author {
+      ...TrackAuthor
+    }
+  }
+}
+```
+
+## !!steps Without fragments
+
+```graphql ! -can
+query GetTrack($trackId: ID!) {
+  track(id: $trackId) {
+    id
+    title
+    author {
+      id
+      name
+      photo
+    }
+  }
+}
+```
+
+</Spotlight>
+
+Now, this is the syntax in isolation, but let's take a look at what fragment usage looks like in Apollo Client with our `GET_TRACK` query.
+
+<CodeWithTabs>
+
+```tsx !!tabs profile.tsx -cn
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+// !mark(1)
+import { CORE_AUTHOR_FIELDS } from "../graphql/fragments"
+
+// !mark(2,8)
+const GET_TRACK = gql(`
+  ${CORE_AUTHOR_FIELDS}
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+      ...CoreAuthorFields
+      }
+    }
+  }
+`)
+```
+
+```ts !!tabs fragment.ts -cn
+import { gql } from "@apollo/client"
+
+// !pill[14:31] 2
+// !pill(2[12:27])
+export const CORE_AUTHOR_FIELDS = gql`
+  fragment CoreAuthorFields on Author {
+    id
+    name
+    photo
+  }
+`
+```
+
+</CodeWithTabs>
+
+Notice in this implementation, we need to import the `CORE_AUTHOR_FIELDS` fragment into our `profile.tsx` file and include it in our `GET_TRACK` query (in addition to the `...CoreAuthorFields` syntax in the query itself). This is because the query itself doesn't know what the definition of our `CoreAuthorFields` is. By adding `CORE_AUTHOR_FIELDS` to our query string, we're interpolating the declaration of the fragment into the query string itself. In other words, we're essentially inserting the definition of the fragment into our query string so that it knows what `...CoreAuthorFields` means.
+
+If we have a fragment that is used in multiple queries across multiple pages or components, it can get quite repetitive to import and interpolate the fragment declaration for every single operation. As of Apollo Client v3.7, we can register fragments with the `InMemoryCache` so that we can use them without needing to import and interpolate the declarations for those fragments.
+
+```tsx index.tsx -cn
+import React from "react"
+import { createRoot } from "react-dom/client"
+import GlobalStyles from "./styles"
+import Pages from "./pages"
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client"
+// !mark(1:2)
+import { createFragmentRegistry } from "@apollo/client/cache"
+import { CORE_AUTHOR_FIELDS } from "./graphql/fragments"
+
+const client = new ApolloClient({
+  uri: "https://your-graphql-endpoint-here.com/",
+  // !mark(1:5)
+  cache: new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      ${CORE_AUTHOR_FIELDS}
+    `),
+  }),
+})
+
+const root = createRoot(document.getElementById("root")!)
+
+// !collapse(1:7) collapsed
+root.render(
+  <React.StrictMode>
+    <ApolloProvider client={client}>
+      <GlobalStyles />
+      <Pages />
+    </ApolloProvider>
+  </React.StrictMode>,
+)
+```
+
+Now we can see the difference in fragment usage with and without the fragment registry.
+
+<Spotlight>
+
+## !!steps With fragment registry
+
+```tsx ! profile.tsx -can
+// other imports above
+
+// !mark(7)
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+      ...CoreAuthorFields
+      }
+    }
+  }
+`)
+
+export const Track = () => {
+  // component code here
+}
+```
+
+## !!steps Without fragment registry
+
+```tsx ! profile.tsx -can
+// other imports above
+// !mark(1)
+import { CORE_AUTHOR_FIELDS } from "./graphql/fragments"
+
+// !mark(2,8)
+const GET_TRACK = gql(`
+  ${CORE_AUTHOR_FIELDS}
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      id
+      title
+      author {
+      ...CoreAuthorFields
+      }
+    }
+  }
+`)
+
+export const Track = () => {
+  // component code here
+}
+```
+
+</Spotlight>
+
+Explicit definitions take precedence over registered fragments. This means that if you have a `CoreAuthorFields` registered with the cache, but you want to override that fragment in a specific query, you can do so by including your own fragment definition of the same `CoreAuthorFields` name in the query string like you normally would if that fragment wasn't registered. Apollo Client will use the local fragment definition in the query string instead of the registered fragment.
+
+### Colocating fragments
+
+The beauty of GraphQL is that we can request what we want where we want it. We can take fragments a step further and colocate them alongside the components that actually need them. This way, we can keep our components clean and only request the data we need where we need it.
+
+Say our track profile page has some nested components that need some parts of the data. We might have an `AuthorInfo` component that takes the `author` data from the track query and displays the author's name and photo in a specific layout. We can colocate an `AuthorInfo` fragment with the `AuthorInfo` component so that it lives alongside the component that needs it, rather than in the parent component file.
+
+There's a couple of different ways to do this. One way is to define the fragment in the component file itself. Another way is to use the `useFragment` hook (available and stable as of Apollo Client v3.8). We'll go over both methods here, starting with "regular" fragment definition in the component file.
+
+<CodeWithTabs>
+
+```tsx !!tabs profile.tsx -cn
+// this is the parent component
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+
+// !mark(4,7)
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      ...TrackDetail
+    }
+  }
+  ${TrackDetail.fragments.track}
+`)
+
+export const Track = () => {
+  const { trackId = "" } = useParams()
+  const { loading, error, data } = useQuery(GET_TRACK, {
+    variables: { trackId },
+  })
+
+  if (error) return <p>Error: {error.message}</p>
+
+  if (loading) return <p>Loading...</p>
+
+  if (data) {
+    return (
+      <Layout>
+        {/* !callout[/track={data\?\.track}/] This implementation remains unchanged */}
+        <TrackDetail track={data?.track} />
+      </Layout>
+    )
+  }
+}
+```
+
+```tsx !!tabs track-card.tsx -cn
+import { TrackDetail } from "../__generated__/TrackDetail"
+import { AuthorInfo } from "./author-info"
+import { gql } from "../__generated__/"
+
+type Props = {
+  track: TrackDetail
+}
+
+export const TrackDetail = ({ track }: Props) => {
+  return (
+    <div>
+      <h2>{track.title}</h2>
+      <AuthorInfo author={track.author} />
+      {/* ...other JSX here */}
+    </div>
+  )
+}
+
+// !mark(1:12)
+TrackDetail.fragments = {
+  track: gql`
+    fragment TrackDetail on Track {
+      title
+      author {
+        ...AuthorInfo
+      }
+    }
+    ${AuthorInfo.fragments.author}
+  `,
+}
+```
+
+```tsx !!tabs author-info.tsx -cwn
+import { AuthorInfo } from "../__generated__/AuthorInfo"
+import { gql } from "../__generated__/"
+
+type Props = {
+  author: AuthorInfo
+}
+
+export const AuthorInfo = ({ author }: Props) => {
+  return (
+    <div>
+      <img src={author.photo} alt={author.name} />
+      <h2>{author.name}</h2>
+    </div>
+  )
+}
+
+// !mark(1:9)
+AuthorInfo.fragments = {
+  author: gql`
+    fragment AuthorInfo on Author {
+      id
+      name
+      photo
+    }
+  `,
+}
+```
+
+</CodeWithTabs>
+
+### `useFragment` hook
+
+As per the Apollo docs, "The `useFragment` hook represents a lightweight live binding into the Apollo Client Cache. It enables Apollo Client to broadcast specific fragment results to individual components. This hook returns an always-up-to-date view of whatever data the cache currently contains for a given fragment. `useFragment` never triggers network requests of its own.
+
+The `useQuery` hook remains the primary hook responsible for querying and populating data in the cache ([see the API reference](https://www.apollographql.com/docs/react/api/react/hooks#usequery)). As a result, the component reading the fragment data via `useFragment` is still subscribed to all changes in the query data, but receives updates only when that fragment's specific data change."
+
+<CodeWithTabs>
+
+```tsx !!tabs index.tsx -cn
+import React from "react"
+import { createRoot } from "react-dom/client"
+import GlobalStyles from "./styles"
+import Pages from "./pages"
+import { ApolloClient, InMemoryCache, ApolloProvider } from "@apollo/client"
+// !mark(1:2)
+import { createFragmentRegistry } from "@apollo/client/cache"
+import { CORE_AUTHOR_FIELDS, CORE_TRACK_FIELDS } from "./graphql/fragments"
+
+const client = new ApolloClient({
+  uri: "https://your-graphql-endpoint-here.com/",
+  // !mark(1:5)
+  cache: new InMemoryCache({
+    fragments: createFragmentRegistry(gql`
+      ${CORE_AUTHOR_FIELDS}
+      ${CORE_TRACK_FIELDS}
+    `),
+  }),
+})
+
+const root = createRoot(document.getElementById("root")!)
+
+// !collapse(1:7) collapsed
+root.render(
+  <React.StrictMode>
+    <ApolloProvider client={client}>
+      <GlobalStyles />
+      <Pages />
+    </ApolloProvider>
+  </React.StrictMode>,
+)
+```
+
+```tsx !!tabs profile.tsx -cn
+import { Layout } from "../components"
+import { useParams } from "react-router-dom"
+import TrackDetail from "../components/track-detail"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__/"
+
+// !mark(4,7)
+const GET_TRACK = gql(`
+  query GetTrack($trackId: ID!) {
+    track(id: $trackId) {
+      ...TrackDetail
+    }
+  }
+  ${TrackDetail.fragments.track}
+`)
+
+export const Track = () => {
+  const { trackId = "" } = useParams()
+  const { loading, error, data } = useQuery(GET_TRACK, {
+    variables: { trackId },
+  })
+
+  if (error) return <p>Error: {error.message}</p>
+
+  if (loading) return <p>Loading...</p>
+
+  if (data) {
+    return (
+      <Layout>
+        {/* !callout[/track={data\?\.track}/] This implementation remains unchanged */}
+        <TrackDetail track={data?.track} />
+      </Layout>
+    )
+  }
+}
+```
+
+```tsx !!tabs track-card.tsx -cn
+import { TrackDetail } from "../__generated__/TrackDetail"
+import { AuthorInfo } from "./author-info"
+import { gql } from "../__generated__/"
+
+type Props = {
+  track: TrackDetail
+}
+
+export const TrackDetail = ({ track }: Props) => {
+  return (
+    <div>
+      <h2>{track.title}</h2>
+      <AuthorInfo author={track.author} />
+      {/* ...other JSX here */}
+    </div>
+  )
+}
+
+TrackDetail.fragments = {
+  track: gql`
+    fragment TrackDetail on Track {
+      id
+      title
+      author {
+        id
+        ...AuthorInfo
+      }
+    }
+    ${AuthorInfo.fragments.author}
+  `,
+}
+```
+
+```tsx !!tabs author-info.tsx -cwn
+import { useFragment } from "@apollo/client"
+import { AuthorInfo } from "../__generated__/AuthorInfo"
+import { gql } from "../__generated__/"
+
+type Props = {
+  id: string
+}
+
+export const AuthorInfo = ({ id }: Props) => {
+  const { complete, data } = useFragment({
+    fragment: CORE_AUTHOR_FIELDS,
+    fragmentName: "CoreAuthorFields",
+    from: {
+      __typename: "Author",
+      id,
+    },
+  })
+
+  if (!complete) return <p>Loading...</p>
+
+  const { photo, name } = data
+
+  return (
+    <div>
+      <img src={photo} alt={name} />
+      <h2>{name}</h2>
+    </div>
+  )
+}
+```
+
+</CodeWithTabs>
+

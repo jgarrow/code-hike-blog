@@ -19,13 +19,17 @@ export const tooltip: AnnotationHandler = {
             {children}
           </TooltipTrigger>
           <TooltipContent
-            // className="bg-zinc-900"
             className="font-sans prose dark:prose-invert prose-p:mb-0 max-w-[400px] "
             sideOffset={4}
             align="start"
             alignOffset={-8}
           >
-            {data?.children || query}
+            <div
+              className="w-full whitespace-break-spaces [&>:first-child]:mt-0"
+              style={{ textIndent: 0 }} // undoes the negative indent from the `wordWrap` AnnotationHandler
+            >
+              {data?.children || query}
+            </div>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

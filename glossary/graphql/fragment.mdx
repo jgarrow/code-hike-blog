@@ -1,0 +1,23 @@
+---
+title: fragment
+---
+
+import { GlossaryExternalLink } from "@/components/glossary-external-link"
+
+A selection set of fields that can be shared between multiple query operations. For example:
+
+```graphql
+fragment UserData on User {
+  id: ID!
+  firstName: String!
+  lastName: String!
+}
+
+query GetUsers {
+  allUsers {
+    ...UserData
+  }
+}
+```
+
+<GlossaryExternalLink href="https://graphql.com/learn/interfaces-and-unions/#fragments">Learn more about fragments</GlossaryExternalLink>

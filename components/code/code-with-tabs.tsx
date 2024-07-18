@@ -17,8 +17,9 @@ export async function CodeWithTabs(props: unknown) {
     //   className="w-full px-3 py-2 border-b border-editorGroup-border bg-editorGroupHeader-tabsBackground text-sm text-tab-activeForeground flex"
     //   style={{ borderColor: "var(--border-color)" }}
     // >
-    <CodeTabs tabs={tabs} />
-    // </div>
+    <div>
+      <CodeTabs tabs={tabs} />
+    </div>
   )
 }
 
@@ -28,7 +29,7 @@ export async function CodeTabs(props: { tabs: RawCode[] }) {
     tabs.map((tab) => highlight(tab, theme)),
   )
   return (
-    <Tabs defaultValue={tabs[0]?.meta} className="w-full h-[37px]">
+    <Tabs defaultValue={tabs[0]?.meta} className="w-full">
       <TabsList className="w-full h-full border border-editorGroup-border bg-editorGroupHeader-tabsBackground text-sm flex rounded-none rounded-t">
         {tabs.map((tab, i) => {
           const { title, flags } = extractFlags(highlighted[i])
@@ -73,7 +74,10 @@ export async function CodeTabs(props: { tabs: RawCode[] }) {
               }
             >
               {flags.includes("c") && (
-                <CopyButton text={highlighted[i].code} className="absolute right-4 my-0 top-2" />
+                <CopyButton
+                  text={highlighted[i].code}
+                  className="absolute right-4 my-0 top-2"
+                />
               )}
               <Pre
                 code={highlighted[i]}

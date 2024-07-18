@@ -1,20 +1,23 @@
 ---
 title: Intro to GraphQL
 description: An overview of the basics of GraphQL for frontend developers
-date: 2024-07-10
+date: 2024-07-18
 authors: [jgarrow]
 className: min-w-[700px] px-16
 draft: true
 ---
 
-import { Code, Columns, Scrollycoding } from "./remotion/code"
+import { Code, Columns } from "./remotion/code"
 import { Callout } from "next-docs-ui/components/callout"
 import { CodeWithTooltips } from "@/components/code-with-tooltips"
-
+import { Scrollycoding } from "@/components/code/scrollycoding"
 import { GlossaryTooltip } from "@/components/glossary-tooltip"
+import { Spotlight } from "@/components/code/spotlight"
+
 import FieldTooltipContent from "@/glossary/graphql/field.mdx"
 import TypeTooltipContent from "@/glossary/graphql/type.mdx"
 import ScalarTooltipContent from "@/glossary/graphql/scalar.mdx"
+import FragmentTooltipContent from "@/glossary/graphql/fragment.mdx"
 
 GraphQL is a query language and specification for APIs that aims to enable clients to request specific data. This specificity in requests promotes efficiency and flexibility in data retrieval.
 
@@ -28,7 +31,7 @@ GraphQL was developed by Facebook in 2012 and released as an open-source project
 
 ## Schema Definition Language (SDL)
 
-A GraphQL schema is a collection of types that define when the API can and can't do. If it's not in the schema, clients can't request it. Think of the schema as a menu at a restaurant. It has a list of all of the things you're allowed to order. If it's not on the menu, you can't order it.
+A GraphQL schema is a collection of types that define what the API can and can't do. If it's not in the schema, clients can't request it. Think of the schema as a menu at a restaurant. It has a list of all of the things you're allowed to order. If it's not on the menu, you can't order it.
 
 The shape of the schema follows a specification syntax called the Schema Definition Language (SDL). This is the syntax that a GraphQL API's schema will ALWAYS take, regardless of what programming language the underlying API is written in or what third-party GraphQL libraries you may be using.
 
@@ -77,7 +80,7 @@ At its core, a schema is made up of object `types` that contain `fields`. The fi
 
 ### Root fields
 
-The entry points for a GraphQL API are called tge "root" types. These are the top-level fields that define what can be accessed. In the Star Wars API, the root fields are `allFilms`, `allPeople`, `allPlanets`, `allSpecies`, and `allStarships`.
+The entry points for a GraphQL API are called the "root" types. These are the top-level fields that define what can be accessed. In the Star Wars API, the root fields are `allFilms`, `allPeople`, `allPlanets`, `allSpecies`, and `allStarships`.
 
 ```js schema.graphql -cwn
 // !pill[6:10]
@@ -115,13 +118,13 @@ Now that we've established the syntax specification for writing a GraphQL schema
 
 As frontend developers, this is where we can have a big impact in the API development. By working closely with backend developers, we can help define what shape we want the data to be in and what fields we need to request. Essentially, we can work together to agree on what the schema should look like and then go our separate ways to develop the frontend and backend in parallel without needing to wait on each other -- as long as both stick to the agreed upon schema, frontend can mock results while backend is still in development, and backend can develop the API with confidence in knowing what the final shape of the data needs to be.
 
-## The Graph
+{/* ## The Graph
 
 So, if we're thinking about the data the client needs rather than being governed by the underlying data structures, we start to think about our data as a objects (like planets in the galaxy) that have relationships with other objects (people that live on those planets).
 
 If we think of each object as a `node` and each relationship as an `edge`, we can start to visualize our data as a graph. This is where the name "GraphQL" comes from -- it's a query language for traversing the "graph" of interconnected and related data.
 
-In other words, a graph in GraphQL terms is an interconnected set of data represented by a schema. It encompasses the relationships between different data types and how they can be queried or mutated. You can read more about what GraphQL is in the [official documentation](https://graphql.com/learn/what-is-graphql/).
+In other words, a graph in GraphQL terms is an interconnected set of data represented by a schema. It encompasses the relationships between different data types and how they can be queried or mutated. You can read more about what GraphQL is in the [official documentation](https://graphql.com/learn/what-is-graphql/). */}
 
 ## Operations
 
@@ -184,7 +187,7 @@ Variable provided by the client. Must match the name of the variable (with the `
 
 ## Sending a request from the client
 
-Now that we have our query operation, let's try to fetch it from the browser instead of the GraphiQL playground. We can test this out straight from the browser console and use the `fetch` API.
+Now that we have our query operation, let's try to fetch it from the browser instead of the GraphiQL playground. We can test this out straight from the [browser console](https://graphql.org/swapi-graphql/?query=query%20GetPerson(%24id%3A%20ID!)%20%7B%0A%20%20person(id%3A%20%24id)%20%7B%0A%20%20%20%20id%0A%20%20%20%20name%0A%20%20%20%20birthYear%0A%20%20%20%20homeworld%20%7B%0A%20%20%20%20%20%20name%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D&operationName=GetPerson&variables=%7B%0A%20%20%22id%22%3A%20%22cGVvcGxlOjE%22%0A%7D) and use the `fetch` API.
 
 By nature, ALL GraphQL requests are sent as POST requests. This is because the query is sent as a JSON object in the body of the request. The query itself is a string, and the variables are an object.
 
@@ -194,7 +197,7 @@ By nature, ALL GraphQL requests are sent as POST requests. This is because the q
 const fetcher = fetch(
   "https://swapi-graphql.netlify.app/.netlify/functions/index",
   {
-    // !pill[12:15] 2
+    // !pill[14:17] 2
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -202,17 +205,17 @@ const fetcher = fetch(
     body: JSON.stringify({
       // !mark(2:11)
       query: `
-      query GetPerson($id: ID!) {
-        person(id: $id) {
-          id
-          name
-          birthYear
-          homeworld {
+        query GetPerson($id: ID!) {
+          person(id: $id) {
+            id
             name
+            birthYear
+            homeworld {
+              name
+            }
           }
         }
-      }
-    `,
+      `,
       variables: {
         id: "cGVvcGxlOjE",
       },
@@ -313,7 +316,7 @@ import {
   </AccordionItem>
 </Accordion>
 
-### Codegen
+## Codegen
 
 Since we use TypeScript here at Springhealth, let's go over some types. Our client apps dont' know anything about our GraphQL schema and it would be a pain to manually write the types for every query and mutation we make. This is where codegen comes in. Codegen is a tool that generates TypeScript types based on your GraphQL schema and operations. This way, you can write your queries and mutations in a `.graphql` file and have the types generated for you. Plus, any time the schema is changed in the backend, you don't have to worry about manually updating all of your types. Let codegen do that for you.
 
@@ -330,8 +333,8 @@ import { CodeWithTabs } from "@/components/code/code-with-tabs"
 
 <Accordion type="single" collapsible>
   <AccordionItem value="item-1" className="border-none [&>h3]:m-0" >
-    <AccordionTrigger className="text-sm py-2 px-3 bg-sky-200 data-[state=open]:rounded-t data-[state=closed]:rounded m-0">Want to see an example configuration of codegen?</AccordionTrigger>
-    <AccordionContent className="border border-sky-500 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0 ">
+    <AccordionTrigger className="text-sm py-2 px-3 bg-blue-400 data-[state=open]:rounded-t data-[state=closed]:rounded m-0 text-white">Want to see an example configuration of codegen?</AccordionTrigger>
+    <AccordionContent className="border border-blue-400 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0 ">
       
       In the root of your repo, create a `codegen.ts` file and add the following configuration:
 
@@ -381,7 +384,7 @@ import { CodeWithTabs } from "@/components/code/code-with-tabs"
   </AccordionItem>
 </Accordion>
 
-### Sending a request
+## Sending a request with Apollo Client
 
 With Apollo Client configured and our types generated, we can now make a request to our GraphQL API. Let's fetch Luke Skywalker's data from the SWAPI GraphQL API using Apollo Client.
 
@@ -389,66 +392,536 @@ With Apollo Client configured and our types generated, we can now make a request
 
 ```tsx !code profile.tsx -cn
 import { Layout } from "../components"
-import TrackCard from "../containers/track-card"
-// !focus(1:19)
+import { useParams } from "react-router-dom"
+import PersonDetail from "../components/person-detail"
+// !focus(1:29)
 import { useQuery } from "@apollo/client"
 // !pill[10:12] 2
 // !tooltip[/gql/] gql
 import { gql } from "../__generated__/"
 
-// !pill[16:18] 2
-const TRACKS = gql(`
-  query GetTracks {
-    tracksForHome {
+// !pill[20:22] 2
+// !pill[7:16] 3
+// !pill(2[19:27],3[16:24])
+const GET_PERSON = gql(`
+  query GetPerson($personId: ID!) {
+    person(id: $personId) {
       id
-      title
-      thumbnail
-      length
-      modulesCount
-      author {
-        id
+      name
+      birthYear
+      eyeColor
+      hairColor
+      gender
+      height
+      mass
+      skinColor
+      species {
         name
-        photo
+      }
+      homeworld {
+        name
+        diameter
+        rotationPeriod
+        orbitalPeriod
+        gravity
+        population
       }
     }
   }
-`);
+`)
 
-const Profile = () => {
-  // !focus(1)
+const Person = () => {
+  const { personId = "" } = useParams()
+  // !focus(1:3)
+  // !pill[45:54] 3
   // !tooltip[/useQuery/] useQuery
-  const { loading, error, data } = useQuery(TRACKS)
+  const { loading, error, data } = useQuery(GET_PERSON, {
+    // !pill[18:25]
+    variables: { personId },
+  })
 
-  if (error) {
-    return <p>Error: {error.message}</p>
-  }
+  if (error) return <p>Error: {error.message}</p>
 
   if (loading) return <p>Loading...</p>
 
   if (data) {
     return (
       <Layout>
-        {data.tracksForHome?.map((track) => (
-          <TrackCard key={track.id} track={track} />
-        ))}
+        <PersonDetail person={data.person} />
       </Layout>
     )
   }
 }
+
+export default Person
 ```
 
 ## !!tooltips gql
 
-<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
-Autogenerated by codegen; named by `gqlTagName` in your codegen config.
-</div>
+  Autogenerated by codegen; named by `gqlTagName` in your codegen config.
 
 ## !!tooltips useQuery
 
-<div className="w-full whitespace-break-spaces [&>:first-child]:mt-0">
 The [`useQuery` hook](https://www.apollographql.com/docs/react/data/queries#executing-a-query) returns an object with three properties: `loading`, `error`, and `data`. `loading` is a boolean that indicates whether the request is still in progress. `error` is an object that contains information about any errors that occurred during the request. `data` is the response data from the server.
 
-If your operation needs any variables, you can pass them in an object as the second argument to the `useQuery` hook. 
-</div>
+If your operation needs any variables, you can pass them in an object as the second argument to the `useQuery` hook.
 
 </CodeWithTooltips>
+
+Since we're using our generated `gql` function when creating our query, TypeScript will automatically infer the correct type of the resulting `data` response object from the `useQuery` hook without the need to explicitly tell `useQuery` what the response type should be.
+
+<Callout>
+  Don't forget to re-run your codegen command every time you make changes to
+  your queries or mutations. This will ensure that your types are always up to
+  date with your schema.
+</Callout>
+
+<Accordion type="single" collapsible>
+  <AccordionItem value="item-2" className="border-non [&>h3]:m-0">
+    <AccordionTrigger className="text-sm py-2 px-3 bg-blue-400 data-[state=open]:rounded-t data-[state=closed]:rounded m-0 text-white">
+      <span>What's this gql function?</span>
+    </AccordionTrigger>
+    <AccordionContent className="border border-blue-400 border-2 border-t-0 py-4 px-3 rounded-b [&>:first-child]:mt-0 ">
+      This `gql` function is autogenerated by `graphql-codegen`. In our codegen
+      config, we renamed it from the default `graphql` to `gql` in the
+      `gqlTagName` property. This is a common convention used by Apollo Client,
+      but you can name it whatever you want. The `gql` function is a template
+      tag function that parses the provided query string into an AST (abstract
+      syntax tree) that Apollo Client can use to make requests to our GraphQL
+      API.
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+
+## Fragments
+
+This is the most basic example of making a request with Apollo Client. But what happens when we have a nested component that needs some data from the same query? We could pass the data down as props, but that can get messy. Instead, we can use <GlossaryTooltip term="fragments"><FragmentTooltipContent /></GlossaryTooltip> and colocate them with the components that need them. This way, we can keep our components clean and only request the data we need where we need it. This will help us avoid overfetching data and avoid unnecessary prop drilling or storing data in React context.
+
+In the example below, we're creating a fragment that we're calling `PlanetDetails` that contains a few fields about that planet. `Planet` would be an existing type in our GraphQL schema. We can then use this fragment in our query to request the author data for each track.
+
+```graphql -cwn
+fragment PlanetDetails on Planet {
+  name
+  diameter
+  rotationPeriod
+  orbitalPeriod
+  gravity
+  population
+}
+```
+
+To use our fragment, we use a triple period (`...`) syntax in an operation that needs the fragments fields (kind of like the spread operator in JavaScript). Let's take a look at how our query from our `Person` component would look with and without the fragment.
+
+<Spotlight>
+
+## !!steps With fragments
+
+```graphql ! -can
+query GetPerson($personId: ID!) {
+  person(id: $personId) {
+    id
+    name
+    birthYear
+    homeworld {
+      ...PlanetDetails
+    }
+  }
+}
+```
+
+## !!steps Without fragments
+
+```graphql ! -can
+query GetPerson($personId: ID!) {
+  person(id: $personId) {
+    id
+    name
+    birthYear
+    homeworld {
+      name
+      diameter
+      rotationPeriod
+      orbitalPeriod
+      gravity
+      population
+    }
+  }
+}
+```
+
+</Spotlight>
+
+## Colocating fragments
+
+The beauty of GraphQL is that we can request what we want where we want it. We can take our fragments and colocate them alongside the components that actually need them. This way, we can keep our components clean and only request the data we need where we need it.
+
+Say our `Person` profile page has some nested components that some of our queried data is needed in. We can break our query up into fragments and colocate them with the components that need them. This will help us to avoid any overfetching or unnecessary prop drilling.
+
+Let's take the home world planet data out of our query and into a fragment for a `PlanetDetails` child component.
+
+<CodeWithTabs>
+
+```tsx !!tabs person.tsx  -cn
+import React from "react"
+import { Layout } from "../components"
+import PlanetDetails from "../components/planet-details"
+import { useParams } from "react-router-dom"
+import { useQuery } from "@apollo/client"
+import { gql } from "../__generated__"
+
+// !mark(7)
+const GET_PERSON = gql(`
+  query GetPerson($id: ID!) {
+    person(id: $id) {
+      id
+      name
+      homeworld {
+        ...PlanetDetails
+      }
+    }
+  }   
+`)
+
+const Person = () => {
+  const { personId = "" } = useParams()
+  const { loading, error, data } = useQuery(GET_PERSON, {
+    variables: { id: personId },
+  })
+
+  if (error) return <p>Error: {error.message}</p>
+
+  if (loading) return <p>Loading...</p>
+
+  // !mark(5)
+  if (data) {
+    return (
+      <Layout>
+        <h1>{data.person.name}</h1>
+        <PlanetDetails planet={data.person.homeworld} />
+      </Layout>
+    )
+  }
+}
+
+export default Person
+```
+
+```tsx !!tabs planet-details.tsx -cn
+// !focus(2:21)
+import React from "react"
+// !pill[15:25] 3
+// !pill[28:39]
+import { gql, useFragment, FragmentType } from "../__generated__"
+
+// !mark(1:10)
+// !pill[7:27] 5
+const PlanetDetailsFragment = gql(`
+  fragment PlanetDetails on Planet {
+    id
+    name
+    diameter
+    rotationPeriod
+    orbitalPeriod
+    gravity
+    population
+  }
+`)
+
+type PlanetDetailsProps = {
+  // !pill[11:22]
+  // !pill[31:51] 5
+  planet: FragmentType<typeof PlanetDetailsFragment>
+}
+
+const PlanetDetails = (props: PlanetDetailsProps) => {
+  // !pill[18:28] 3
+  // !pill[30:50] 5
+  const planet = useFragment(PlanetDetailsFragment, props.planet)
+
+  // !collapse(1:9) collapsed
+  return (
+    <div>
+      <h2>{planet.name}</h2>
+      <p>Diameter: {planet.diameter}</p>
+      <p>Rotation Period: {planet.rotationPeriod}</p>
+      <p>Orbital Period: {planet.orbitalPeriod}</p>
+      <p>Gravity: {planet.gravity}</p>
+      <p>Population: {planet.population}</p>
+    </div>
+  )
+}
+
+export default PlanetDetails
+```
+
+</CodeWithTabs>
+
+Since we're using codegen, we can use the `useFragment` hook it creates for us to get the data from our fragment, complete with the correct TypeScript types. If our parent page/component contains children whose fragments request some of the same data, we can still colocate all of those fragments the same way and the final query response will dedupe any duplicated fields for us. And if we peek in our network panel, we can see that our parent component is only ever making 1 request to the server, even though our code is structured in a way to give us the illusion that we're requesting the data exactly where we need to use it. This is the power of GraphQL and fragments. Colocation, less complex prop drilling and state management, and fewer queries fired off. 🎉
+
+We could keep going deeper with fragments, but I think this is a good stopping point for now. If you're interested in learning more about fragments, I'd recommend checking out the [Apollo Client docs](https://www.apollographql.com/docs/react/data/fragments) and [GraphQL Codegen docs](https://the-guild.dev/blog/unleash-the-power-of-fragments-with-graphql-codegen) for more information. Just note that codegen makes the implementation of fragments a bit different than using Apollo Client with JavaScript than with TypeScript.
+
+## Caching
+
+For our last topic today, let's talk about caching. Apollo Client comes out-of-the-box with a normalized `InMemoryCache` in the browser. In practice, this allows Apollo Client to give back a response that it finds in the cache seemingly immediately after a request was made, all without ever actually sending a network request. This is because Apollo Client stores the data it receives in the cache and then checks the cache before making a request to the server. If the data is already in the cache, it will return that data instead of making a network request.
+
+<Callout>
+  The [Apollo Client
+  docs](https://www.apollographql.com/docs/react/caching/overview/) have some
+  great diagram visualizations of how their cache works, so I'd recommend
+  checking those out if you're interested in learning more about how the cache
+  works under the hood.
+</Callout>
+
+Let's walk through the Apollo Client's caching process, using this JSON as our example query response:
+
+```json query-response.json -n
+{
+  "data": {
+    "person": {
+      // !mark(1:2)
+      "__typename": "Person",
+      "id": "cGVvcGxlOjE=",
+      "name": "Luke Skywalker",
+      "homeworld": {
+        // !mark(1:2)
+        "__typename": "Planet",
+        "id": "cGxhbmV0czox",
+        "name": "Tatooine"
+      }
+    }
+  }
+}
+```
+
+When a query response comes back from the server, the Apollo Client cache does the following:
+
+1. Identifies objects in the query response, **identifying them by their `id` field**. If we want an object to be more easily cacheable (i.e. flat with the rest of the cache vs as a nested object), we want to add the `id` field to all of our object queries.
+
+In our example, it will find 2 objects: a `Person` object with an `id` of `cGVvcGxlOjE=` and a `Planet` object with an `id` of `cGxhbmV0czox`.
+
+2. Generates cache IDs for each object. By default, Apollo Client uses the `__typename` and `id` fields ( separated by a colon `:`) to generate a unique cache ID for each object.
+
+The default cache IDs for our example objects would be `Person:cGVvcGxlOjE=` and `Planet:cGxhbmV0czox`.
+
+3. Replaces object fields that contain other objects with references (via the generated cache ID) to those objects in the cache.
+
+<Spotlight>
+
+## !!steps Before reference replacement
+
+```json ! -can
+{
+  "__typename": "Person",
+  "id": "cGVvcGxlOjE=",
+  "name": "Luke Skywalker",
+  // !mark(1:5)
+  "homeworld": {
+    "__typename": "Planet",
+    "id": "cGxhbmV0czox",
+    "name": "Tatooine"
+  }
+}
+```
+
+## !!steps After reference replacement
+
+```json ! -can
+{
+  "__typename": "Person",
+  "id": "cGVvcGxlOjE=",
+  "name": "Luke Skywalker",
+  // !mark(1:3)
+  "homeworld": {
+    "__ref": "Planet:cGxhbmV0czox"
+  }
+}
+```
+
+</Spotlight>
+
+4. Stores normalized objects in the cache's flat lookup table. If an incoming object has the same cache ID as an existing object in the cache, Apollo Client merges the fields of those objects. The incoming object overwrites the existing object's fields. Other fields that are not in the incoming object are left untouched.
+
+<Callout>
+  There is an [Apollo Client Devtools Chrome
+  extension](https://chromewebstore.google.com/detail/apollo-client-devtools/jdkknkkbebbapilgoeccciglkfbmbnfm)
+  that you can use to inspect the cache and see what and how the data is being
+  cached. It's a useful tool when you're debugging cache issues or making
+  improvements to your cache strategy.
+</Callout>
+
+## Updating the cache
+
+While reading our data from the cache is ⚡️ fast ⚡️, sometimes it gets stale and we need to update it. There are a few ways that we can achieve this:
+
+1. **Refetching**: We can refetch the data from the server. This is the simplest way to update the cache, but it's not always the most efficient since you're firing off another request. If we're updating a single object, we can use the `refetch` method on the `useQuery` hook. If we're updating multiple objects, we can use the `refetchQueries` option in the `useMutation` hook.
+
+2. **Polling**: This is similar to refetching, but it's done at regular intervals. We can use the [`pollInterval` option](https://www.apollographql.com/docs/react/data/queries#polling) in the `useQuery` hook to set how often we want to poll the server for updated data.
+
+3. **Manual cache updates**: We can also manually update the cache after a mutation completes via the [`update` option](https://www.apollographql.com/docs/react/data/mutations#mutationhookoptions-interface-update) on the `useMutation` hook. This is helpful in cases where we want to update the cache with the new data without refetching the entire query.
+
+4. **Optimistic updates**: We can update the cache optimistically before the server responds. This is useful for when we're updating a single object. We can use the [`optimisticResponse` option](https://www.apollographql.com/docs/react/performance/optimistic-ui/) in the `useMutation` hook to update the cache with the new data before the server responds.
+
+The Apollo docs recommending using a combination of both approaches: optimistically or manually updating to allow the UI to immediately reflect the change, and then refetch in the background to ensure the cache is up to date with the server. The UI is then only rerendered if there are differences between the local cache and refetched data.
+
+For the sake of time, we'll only go over using the [`update` function option](https://www.apollographql.com/docs/react/data/mutations/#the-update-function) on the `useMutation` hook to manually update our cache. Be sure to check out the [docs](https://www.apollographql.com/docs/react/data/mutations/#options) for what other options are available to you.
+
+The Star Wars API doesn't have any mutations that we can use, so we'll have to imagine that we're updating a planet's population.
+
+<CodeWithTooltips>
+
+```tsx !code update-planet-population.tsx -cn
+import { gql } from "../__generated__"
+import { useMutation } from "@apollo/client"
+import { GET_PERSON } from "./person"
+
+// !mark(1:8)
+const UPDATE_PLANET_POPULATION = gql(`
+  mutation UpdatePlanetPopulation($planetId: ID!, $population: Int!) {
+    updatePlanetPopulation(id: $planetId, population: $population) {
+      id
+      population
+    }
+  }
+`)
+
+const UpdatePlanetPopulation = ({
+  planetId,
+  newPopulation = 1000,
+}: {
+  planetId: string
+  newPopulation: number
+}) => {
+  const [updatePlanetPopulation] = useMutation(UPDATE_PLANET_POPULATION, {
+    // !tooltip[/cache/] cache
+    // !tooltip[/data/] data
+    update(cache, { data }) {
+      // !mark(1:19)
+      // Option 1: Update the cache with `updateQuery`
+      // For updating the cache at the cache query level
+      // !tooltip[/cache\.updateQuery/] updateQuery
+      cache.updateQuery(
+        {
+          query: GET_PERSON,
+          variables: { personId },
+        },
+        (queryData) => {
+          return {
+            person: {
+              ...queryData.person,
+              homeworld: {
+                ...queryData.person.homeworld,
+                population: data.updatePlanetPopulation.population,
+              },
+            },
+          }
+        },
+      )
+
+      // !mark(1:17)
+      // Option 2: Update the cache with `updateFragment`
+      // For updating the cache at the individual cache object level
+      // !tooltip[/cache\.updateFragment/] updateFragment
+      cache.updateFragment(
+        {
+          // !tooltip[/cache\.identify/] identify
+          id: cache.identify(data.updatePlanetPopulation),
+          fragment: gql(`
+            fragment NewPopulation on Planet {
+              population
+            }
+          `),
+        },
+        (fragmentData) => {
+          return {
+            population: data.updatePlanetPopulation.population,
+          }
+        },
+      )
+
+      // !mark(1:9)
+      // Option 3: Update the cache with `modify`
+      // !tooltip[/cache\.modify/] modify
+      cache.modify({
+        id: cache.identify(data.updatePlanetPopulation),
+        fields: {
+          population(existingPopulationRef = {}) {
+            return data.updatePlanetPopulation.population
+          },
+        },
+      })
+    },
+  })
+
+  return (
+    <button
+      onClick={() => {
+        updatePlanetPopulation({
+          variables: {
+            planetId,
+            population: newPopulation,
+          },
+        })
+      }}
+    >
+      Update Planet Population
+    </button>
+  )
+}
+```
+
+## !!tooltips cache
+
+The `cache` argument is the current state of our Apollo Client cache. This is what we'll use to read and write data to update the cache.
+
+## !!tooltips data
+
+`data` is the response data from our mutation. We'll use this data to update our cache.
+
+## !!tooltips identify
+
+`cache.identify` is a method that, given an object with a `__typename` and `id`, returns the cache ID for that object. This is what we'll use to identify the object we want to update in the cache.
+
+## !!tooltips updateQuery
+
+`cache.updateQuery` is a method that allows us to both read and write to the cache with a single method call. If you need to read data from one query in the cache and write to a different object in the cache, you might want to use `cache.readQuery` and `cache.writeQuery` instead. 
+
+Check out the [Apollo docs](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for more information on how to use these methods.
+
+## !!tooltips updateFragment
+
+`cache.updateFragment` is a method that allows us to both read and write to the cache with a single method call. If you need to read data from one query in the cache and write to a different object in the cache, you might want to use `cache.readFragment` and `cache.writeFragment` instead.
+
+Check out the [Apollo docs](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-updatequery-and-updatefragment) for more information on how to use these methods.
+
+## !!tooltips modify
+
+`cache.modify` is a method that enables you to directly modify the values of individual cached fields, or even delete fields entirely. **Note**: this method ignores any custom merge functions you might have set up for your cache. Instead, it directly overwrites the existing field value with the new value you provide. However, you can circumvent this by utilizing the `writeQuery` or `writeFragment` methods within the `modify` method.
+
+Check out the [Apollo docs](https://www.apollographql.com/docs/react/caching/cache-interaction/#using-modify) for more information.
+
+</CodeWithTooltips>
+
+## Other caching notes
+
+We didn't quite have time to delve deeper into caching. But here's a non-exhaustive list of other caching strategies and configuration options to be aware of:
+
+- [Fetch policies](https://www.apollographql.com/docs/react/data/queries#setting-a-fetch-policy)
+- [Garbage collection](https://www.apollographql.com/docs/react/caching/garbage-collection)
+- [Custom merge functions](https://www.apollographql.com/docs/react/caching/cache-field-behavior)
+- [Cache sizing and memory management](https://www.apollographql.com/docs/react/caching/memory-management)
+- [Cache redirects](https://www.apollographql.com/docs/react/caching/advanced-topics)
+
+## Summary
+
+And that's a wrap! We've covered a lot of ground today, from what are schemas and operations to sending requests to optimizing our queries with fragments and updating the cache. I hope you've learned something new today and feel more confident in your GraphQL skills. If you have any questions, feel free to reach out!
+
+I've included a list of resources and tidbits that I think would be useful to you as you continue on your GraphQL journey. Happy coding! 🚀
+
+## Resources
+
+- [Apollo's free tutorials](apollographql.com/tutorials)
+- [GraphQL Codegen docs](https://www.graphql-code-generator.com/)
+- [Apollo Client docs](https://www.apollographql.com/docs/react/)
+- [Laura Beatris' talk](https://www.youtube.com/watch?v=vwpqHYuSAXE&themeRefresh=1) on caching with Apollo Client 3
+- [Raman Lally's talk](https://www.youtube.com/watch?v=BmbAR2Mdm4M) on fine tuning your cache
+- [Official GraphQL docs](https://graphql.org/learn/)

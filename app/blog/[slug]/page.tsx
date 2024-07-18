@@ -16,7 +16,9 @@ export default async function Page({ params }: { params: { slug: string } }) {
   return (
     <main
       className={cn(
-        "max-w-2xl mx-auto prose dark:prose-invert my-12 px-8 box-content pb-36",
+        // "max-w-2xl mx-auto prose dark:prose-invert my-12 px-8 box-content pb-36",
+        "mx-auto prose dark:prose-invert my-12 px-8 box-content pb-36",
+        "grid grid-cols-[1fr_42rem_1fr] [&>*]:col-start-2 max-w-[1100px]",
         page.data.className,
       )}
     >
